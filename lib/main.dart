@@ -1,5 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_xlider/flutter_xlider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+
+var data;
+Future<Post> fetchPost() async {
+  final response =
+  await http.get('http://10.0.2.2:5000/');
+  if (response.statusCode == 200) {
+    data = json.decode(response.body);
+    data=data["institutes"] as List;
+    return Post.fromJson(json.decode(response.body));
+  } else {
+    throw Exception('Failed to load post');
+  }
+}
+
+class Post {
+  final List temp;
+  Post({this.temp});
+
+  factory Post.fromJson(Map<String, dynamic> json) {
+//    return data;
+    return Post(
+      temp:data,
+    );
+  }
+}
+
 
 void main() => runApp(MyApp());
 
@@ -19,24 +48,14 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   double rating=0;
+  Future<Post> post;
   String dropdownValue = '1';
   @override
   Widget build(BuildContext context) {
@@ -135,6 +154,40 @@ class _MyHomePageState extends State<MyHomePage> {
                       .toList(),
                 )
               ],
+            ),
+            Container(
+              child:
+                FutureBuilder<Post>(
+                    future: post,
+                     builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                       print(snapshot.data);
+                       }  else if (snapshot.hasError) {
+                    return AlertDialog(
+                    title: Text('Error!'),
+                    content: SingleChildScrollView(
+                    child: ListBody(
+                    children: <Widget>[
+                    Text("Please Check Your Network Connection!"),
+                    Text("${snapshot.error}"),
+                    ],
+                    ),
+                    ),
+                    actions: <Widget>[
+                    FlatButton(
+                    child: Text('Ok'),
+                    onPressed: () {},
+                    ),
+                    ],
+                    );
+                    }
+                    return Column(
+                    children: <Widget>[
+                    CircularProgressIndicator(),
+                 ],
+                );
+               },
+              ),
             )
           ],
         )
